@@ -1,0 +1,2580 @@
+:root {
+  --nn-primary: #1677ff;
+  --nn-green: #22d3a5;
+  --nn-navy: #34465c;
+  --nn-bg: #f8fafc;
+  --nn-text: #14243a;
+  --nn-muted: #5b6b80;
+  --nn-card: rgba(255, 255, 255, 0.86);
+  --nn-radius-lg: 28px;
+  --nn-shadow: 0 10px 30px rgba(20, 36, 58, 0.12);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--nn-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #8ec9f5;
+  overscroll-behavior: none;
+}
+
+.nn-map {
+  position: absolute;
+  inset: 0;
+}
+
+/* Floating white translucent card used across the app */
+.nn-card {
+  background: var(--nn-card);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: var(--nn-radius-lg);
+  box-shadow: var(--nn-shadow);
+}
+
+.nn-notice {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: linear-gradient(#8ec9f5, #f8fafc);
+}
+
+.nn-notice .nn-card {
+  max-width: 440px;
+  padding: 28px;
+  line-height: 1.5;
+}
+
+.nn-notice h1 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.nn-notice code {
+  background: #eef2f8;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.9em;
+}
+
+/* Make Mapbox's required logo/attribution sit neatly at the bottom */
+.mapboxgl-ctrl-bottom-left,
+.mapboxgl-ctrl-bottom-right {
+  margin-bottom: env(safe-area-inset-bottom);
+}
+
+/* ============ Floating UI layer (phone-width column, centred on big screens) ============ */
+.nn-overlay {
+  position: absolute;
+  inset: 0;
+  max-width: 520px;
+  margin: 0 auto;
+  pointer-events: none; /* let touches reach the map... */
+  padding: calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 16px);
+}
+.nn-overlay > * {
+  pointer-events: auto; /* ...except on the cards and buttons */
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---- Top instruction card ---- */
+.nn-instruction {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-height: 104px;
+  padding: 18px 18px 18px 24px;
+  background: rgba(248, 251, 253, 0.92);
+}
+.nn-instruction__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 64px;
+}
+.nn-instruction__divider,
+.nn-trip__divider {
+  flex: none;
+  width: 1.5px;
+  align-self: stretch;
+  margin: 6px 0;
+  background: rgba(20, 36, 58, 0.14);
+  border-radius: 1px;
+}
+.nn-instruction__text {
+  flex: 1;
+  min-width: 0;
+}
+.nn-instruction__title {
+  font-size: clamp(24px, 7vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nn-instruction__sub {
+  margin-top: 4px;
+  font-size: clamp(19px, 5.4vw, 25px);
+  font-weight: 500;
+  color: var(--nn-muted);
+  white-space: nowrap; /* one line like the reference; long road names end with "…" */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nn-instruction__close {
+  flex: none;
+  align-self: flex-start;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: #e8eef4;
+}
+
+/* ---- Speed gauge ---- */
+.nn-speed {
+  position: absolute;
+  left: 18px;
+  top: calc(env(safe-area-inset-top) + 152px);
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--nn-shadow), 0 0 0 4px rgba(255, 255, 255, 0.55);
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
+.nn-speed__ring {
+  position: absolute;
+  inset: 0;
+}
+.nn-speed__value {
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.nn-speed__unit {
+  margin-top: 2px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* ---- Round side buttons ---- */
+.nn-side-buttons {
+  position: absolute;
+  right: 18px;
+  top: calc(env(safe-area-inset-top) + 152px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.nn-side-buttons--home {
+  top: calc(env(safe-area-inset-top) + 100px);
+}
+.nn-map-button {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: var(--nn-shadow);
+  transition: transform 0.15s ease;
+}
+.nn-map-button:active {
+  transform: scale(0.94);
+}
+.nn-map-button.is-active {
+  box-shadow: var(--nn-shadow), 0 0 0 3px rgba(22, 119, 255, 0.35);
+}
+
+/* ---- Bottom trip card ---- */
+.nn-bottom-stack {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: calc(env(safe-area-inset-bottom) + 16px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+.nn-bottom-stack > * {
+  pointer-events: auto;
+}
+.nn-trip {
+  width: 100%;
+  padding: 14px 20px 22px 28px;
+  border-radius: 32px;
+  background: rgba(250, 252, 254, 0.94);
+}
+.nn-home-card {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: calc(env(safe-area-inset-bottom) + 16px);
+  width: auto;
+}
+.nn-trip__handle {
+  width: 64px;
+  height: 5px;
+  margin: 0 auto 14px;
+  border-radius: 3px;
+  background: #a3afbd;
+}
+.nn-trip__row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.nn-trip__info {
+  flex: 1;
+  min-width: 0;
+}
+.nn-trip__duration {
+  font-size: clamp(30px, 8.5vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.nn-trip__meta {
+  margin-top: 4px;
+  font-size: clamp(15px, 4.2vw, 19px);
+  font-weight: 500;
+  color: var(--nn-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nn-dot {
+  margin: 0 4px;
+}
+.nn-home-card__title {
+  font-size: 22px;
+  font-weight: 700;
+}
+.nn-primary-button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 60px;
+  padding: 0 24px 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #2a86ff, #1677ff);
+  color: #fff;
+  font-size: clamp(17px, 4.8vw, 21px);
+  font-weight: 600;
+  box-shadow: 0 8px 20px rgba(22, 119, 255, 0.35);
+  transition: transform 0.15s ease;
+}
+.nn-primary-button:active {
+  transform: scale(0.97);
+}
+
+.nn-recenter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 22px 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--nn-primary);
+  font-size: 17px;
+  font-weight: 600;
+  box-shadow: var(--nn-shadow);
+  animation: nn-pop-in 0.2s ease-out;
+}
+.nn-recenter-pill:active {
+  transform: scale(0.96);
+}
+@keyframes nn-pop-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.nn-demo-badge {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(20, 36, 58, 0.72);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ---- Home search bar ---- */
+.nn-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 64px;
+  padding: 0 22px;
+  border-radius: 32px;
+}
+.nn-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 18px;
+  color: var(--nn-text);
+  outline: none;
+}
+.nn-search input::placeholder {
+  color: var(--nn-muted);
+}
+.nn-search__hint {
+  font-size: 12px;
+  color: var(--nn-muted);
+  background: #eef2f8;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.nn-notice .nn-primary-button {
+  margin-top: 8px;
+  height: 52px;
+}
+
+/* Small phones */
+@media (max-width: 400px) {
+  .nn-arrive-label { display: none; } /* "3.2 km • 11:52 PM" like the second reference image */
+  .nn-trip { padding-left: 22px; }
+  .nn-trip__row { gap: 12px; }
+}
+@media (max-width: 380px) {
+  .nn-instruction { gap: 12px; padding-left: 16px; min-height: 92px; }
+  .nn-instruction__icon { width: 52px; }
+  .nn-instruction__icon svg { width: 52px; height: 52px; }
+  .nn-primary-button { padding: 0 20px; height: 54px; }
+  .nn-speed { width: 92px; height: 92px; }
+  .nn-speed__value { font-size: 32px; }
+}
+
+/* ============ Phase 5 & 6: search, GPS banner, destination card ============ */
+button.nn-search {
+  width: 100%;
+  border: 0;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.nn-search__label {
+  flex: 1;
+  min-width: 0;
+  font-size: 18px;
+  color: var(--nn-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nn-search__label.has-value {
+  color: var(--nn-text);
+  font-weight: 600;
+}
+.nn-icon-button {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+}
+.nn-icon-button:active {
+  background: #eef2f8;
+}
+
+/* Full-screen search sheet */
+.nn-search-screen {
+  position: absolute;
+  inset: 0;
+  background: rgba(248, 250, 252, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: nn-fade-in 0.15s ease-out;
+}
+@keyframes nn-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.nn-search-screen__inner {
+  max-width: 520px;
+  height: 100%;
+  margin: 0 auto;
+  padding: calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.nn-search--active {
+  padding: 0 10px 0 6px;
+  gap: 6px;
+}
+.nn-results {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 0;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.95);
+}
+.nn-results__heading {
+  padding: 12px 20px 6px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--nn-muted);
+}
+.nn-results__message {
+  padding: 20px;
+  color: var(--nn-muted);
+  line-height: 1.5;
+}
+.nn-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 16px 10px;
+}
+.nn-chip {
+  border: 0;
+  border-radius: 999px;
+  padding: 9px 14px;
+  background: #eef4ff;
+  color: var(--nn-primary);
+  font-size: 15px;
+  font-weight: 600;
+}
+.nn-place-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.nn-place {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 12px 20px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  color: inherit;
+}
+.nn-place:active {
+  background: #f1f5f9;
+}
+.nn-place__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+}
+.nn-place__icon--poi {
+  background: var(--nn-primary);
+}
+.nn-place__icon--area {
+  background: #eef2f8;
+}
+.nn-place__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.nn-place__name {
+  font-size: 17px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nn-place__address {
+  margin-top: 2px;
+  font-size: 14px;
+  color: var(--nn-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nn-place__distance {
+  flex: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--nn-muted);
+}
+
+/* GPS message banner */
+.nn-banner {
+  margin-top: 10px;
+  margin-right: 86px; /* leave room for the round buttons */
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.nn-banner__actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 6px;
+}
+.nn-link-button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--nn-primary);
+  font-weight: 700;
+  font-size: 14px;
+}
+.nn-link-button--muted {
+  color: var(--nn-muted);
+}
+
+/* Destination details card */
+.nn-dest-card__top {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.nn-dest-card__address {
+  margin-top: 4px;
+  font-size: 15px;
+  color: var(--nn-text);
+  line-height: 1.35;
+}
+.nn-dest-card__meta {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--nn-muted);
+}
+.nn-dest-card__close {
+  margin-top: -4px;
+  background: #e8eef4;
+}
+.nn-dest-card__go {
+  width: 100%;
+  justify-content: center;
+  margin-top: 14px;
+}
+.nn-primary-button:disabled {
+  background: #c9d6e6;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.nn-results__credit {
+  padding: 10px 20px 6px;
+  font-size: 12px;
+  color: var(--nn-muted);
+}
+.nn-results__credit a {
+  color: inherit;
+}
+
+/* ============ Phase 7: route preview ============ */
+.nn-route-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px 12px 8px;
+}
+.nn-route-top__points {
+  flex: 1;
+  min-width: 0;
+}
+.nn-route-top__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 28px;
+}
+.nn-route-top__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 17px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nn-route-top__line {
+  width: 2px;
+  height: 12px;
+  margin-left: 8px;
+  background: repeating-linear-gradient(#a3afbd 0 3px, transparent 3px 6px);
+}
+.nn-dot-start {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--nn-primary);
+  border: 4px solid #dbe8ff;
+}
+.nn-dot-end {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--nn-green);
+}
+.nn-route-sheet {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: calc(env(safe-area-inset-bottom) + 12px);
+  max-height: 62%;
+  overflow-y: auto;
+  padding: 12px 16px 16px;
+  border-radius: 32px;
+  background: rgba(250, 252, 254, 0.96);
+}
+.nn-route-sheet__message {
+  padding: 8px 6px 12px;
+  color: var(--nn-muted);
+  line-height: 1.45;
+}
+.nn-route-sheet__message p {
+  margin: 0 0 8px;
+}
+.nn-route-list {
+  list-style: none;
+  margin: 0 0 6px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.nn-route-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid transparent;
+  border-radius: 18px;
+  background: #f1f5f9;
+  text-align: left;
+  color: inherit;
+}
+.nn-route-option.is-selected {
+  border-color: var(--nn-green);
+  background: #ecfbf6;
+}
+.nn-route-option__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.nn-route-option__time {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.nn-route-option__meta {
+  font-size: 14px;
+  color: var(--nn-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nn-route-option__side {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.nn-route-option__arrive {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--nn-muted);
+}
+.nn-badge {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.nn-badge--toll {
+  background: #fff1d6;
+  color: #9a5b00;
+}
+.nn-badge--free {
+  background: #dcf7ec;
+  color: #0e6b4f;
+}
+.nn-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 6px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.nn-switch {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  width: 50px;
+  height: 30px;
+  margin: 0;
+  border-radius: 999px;
+  background: #cbd5e1;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.nn-switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s;
+}
+.nn-switch:checked {
+  background: var(--nn-green);
+}
+.nn-switch:checked::after {
+  transform: translateX(20px);
+}
+.nn-route-sheet__start {
+  width: 100%;
+  justify-content: center;
+}
+.nn-route-sheet__note {
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--nn-muted);
+  text-align: center;
+}
+
+/* Tappable start / destination rows + swap */
+button.nn-route-top__row {
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: none;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  border-radius: 10px;
+}
+button.nn-route-top__row:active {
+  background: #eef2f8;
+}
+.nn-route-top__swap {
+  background: #eef2f8;
+}
+.nn-route-top__swap:disabled {
+  opacity: 0.4;
+}
+.nn-route-sheet__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+}
+.nn-place--mine {
+  border-bottom: 1px solid #eef2f8;
+}
+.nn-place__icon--mine {
+  background: var(--nn-primary);
+}
+
+/* Navigation status line */
+.nn-status--warn {
+  background: rgba(176, 82, 0, 0.88);
+}
+.nn-status--info {
+  background: rgba(20, 36, 58, 0.72);
+}
+.nn-demo-badge {
+  max-width: 100%;
+  text-align: center;
+}
+
+/* ============ Phase 9: settings ============ */
+button {
+  color: inherit; /* icons use currentColor, so they follow the day / night theme */
+}
+.nn-instruction__icon {
+  color: #0e4d3a; /* dark green turn arrow (reference image) */
+}
+.nn-instruction__close {
+  color: var(--nn-muted);
+}
+.nn-settings__title {
+  font-size: 19px;
+  font-weight: 700;
+}
+.nn-settings {
+  padding-bottom: 16px;
+}
+.nn-settings__section {
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--nn-line);
+}
+.nn-settings__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  padding: 6px 20px;
+}
+.nn-settings__label {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.nn-settings__hint {
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--nn-muted);
+}
+.nn-settings__check {
+  color: var(--nn-green);
+  font-weight: 800;
+  font-size: 18px;
+}
+.nn-settings__soon {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--nn-subtle);
+  color: var(--nn-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.nn-settings__about {
+  padding: 14px 20px 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--nn-muted);
+}
+.nn-segmented {
+  flex: none;
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--nn-subtle);
+}
+.nn-segmented button {
+  border: 0;
+  padding: 7px 12px;
+  border-radius: 9px;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--nn-muted);
+}
+.nn-segmented button.is-active {
+  background: var(--nn-card-solid);
+  color: var(--nn-text);
+  box-shadow: 0 1px 4px rgba(20, 36, 58, 0.15);
+}
+.nn-route-sheet__also {
+  padding: 0 6px 8px;
+  font-size: 13px;
+  color: var(--nn-muted);
+}
+
+/* Theme tokens used above (day) */
+:root {
+  --nn-line: #eef2f8;
+  --nn-subtle: #eef2f8;
+  --nn-card-solid: #ffffff;
+}
+
+/* ============ Night theme: dark translucent cards, light text ============ */
+:root[data-theme='dark'] {
+  --nn-text: #eaf0f7;
+  --nn-muted: #9aabbf;
+  --nn-card: rgba(20, 30, 46, 0.86);
+  --nn-card-solid: #1c2a3d;
+  --nn-line: rgba(255, 255, 255, 0.08);
+  --nn-subtle: rgba(255, 255, 255, 0.08);
+  --nn-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  color-scheme: dark;
+}
+:root[data-theme='dark'] html,
+:root[data-theme='dark'] body,
+:root[data-theme='dark'] #root {
+  background: #0d1624;
+}
+:root[data-theme='dark'] .nn-overlay,
+:root[data-theme='dark'] .nn-search-screen {
+  color: var(--nn-text);
+}
+:root[data-theme='dark'] .nn-instruction,
+:root[data-theme='dark'] .nn-trip,
+:root[data-theme='dark'] .nn-route-sheet,
+:root[data-theme='dark'] .nn-results,
+:root[data-theme='dark'] .nn-recenter-pill,
+:root[data-theme='dark'] .nn-map-button,
+:root[data-theme='dark'] .nn-speed {
+  background: var(--nn-card);
+}
+:root[data-theme='dark'] .nn-speed {
+  box-shadow: var(--nn-shadow), 0 0 0 4px rgba(255, 255, 255, 0.06);
+}
+:root[data-theme='dark'] .nn-speed__ring circle:first-child {
+  stroke: rgba(255, 255, 255, 0.12);
+}
+:root[data-theme='dark'] .nn-instruction__icon {
+  color: var(--nn-green); /* mint arrow reads better on dark */
+}
+:root[data-theme='dark'] .nn-instruction__close,
+:root[data-theme='dark'] .nn-dest-card__close,
+:root[data-theme='dark'] .nn-route-top__swap,
+:root[data-theme='dark'] .nn-chip,
+:root[data-theme='dark'] .nn-place__icon--area,
+:root[data-theme='dark'] .nn-search__hint,
+:root[data-theme='dark'] .nn-notice code {
+  background: var(--nn-subtle);
+}
+:root[data-theme='dark'] .nn-chip {
+  color: #7fb2ff;
+}
+:root[data-theme='dark'] .nn-route-option {
+  background: var(--nn-subtle);
+}
+:root[data-theme='dark'] .nn-route-option.is-selected {
+  background: rgba(34, 211, 165, 0.14);
+}
+:root[data-theme='dark'] .nn-place:active,
+:root[data-theme='dark'] .nn-icon-button:active,
+:root[data-theme='dark'] button.nn-route-top__row:active {
+  background: var(--nn-subtle);
+}
+:root[data-theme='dark'] .nn-instruction__divider,
+:root[data-theme='dark'] .nn-trip__divider {
+  background: rgba(255, 255, 255, 0.14);
+}
+:root[data-theme='dark'] .nn-trip__handle {
+  background: rgba(255, 255, 255, 0.25);
+}
+:root[data-theme='dark'] .nn-search input {
+  color: var(--nn-text);
+}
+:root[data-theme='dark'] .nn-search-screen {
+  background: rgba(8, 14, 24, 0.6);
+}
+:root[data-theme='dark'] .nn-badge--toll {
+  background: rgba(255, 176, 32, 0.18);
+  color: #ffc766;
+}
+:root[data-theme='dark'] .nn-badge--free {
+  background: rgba(34, 211, 165, 0.16);
+  color: #5fe3bd;
+}
+:root[data-theme='dark'] .nn-primary-button:disabled {
+  background: #34465c;
+  color: #9aabbf;
+}
+
+/* ============ SOS ============ */
+.nn-sos-button {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ff6b6b, #e02424);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow: 0 8px 20px rgba(224, 36, 36, 0.45);
+  transition: transform 0.15s ease;
+}
+.nn-sos-button:active {
+  transform: scale(0.94);
+}
+.nn-sos-button--stack {
+  align-self: flex-end; /* bottom-right, just above the bottom card */
+  margin-right: 6px;
+}
+/* The home cards sit inside the bottom stack instead of being positioned on their own. */
+.nn-bottom-stack .nn-home-card {
+  position: static;
+  width: 100%;
+}
+.nn-sos {
+  z-index: 10;
+  color: var(--nn-text);
+}
+.nn-sos__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 10px 12px 14px;
+  border-radius: 28px;
+}
+.nn-sos__badge {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #e02424;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+}
+.nn-sos__heading {
+  flex: 1;
+  min-width: 0;
+}
+.nn-sos__title {
+  font-size: 19px;
+  font-weight: 700;
+}
+.nn-sos__sub {
+  font-size: 13px;
+  color: var(--nn-muted);
+}
+.nn-sos__location {
+  margin: 4px 12px 8px;
+  padding: 2px 8px 12px;
+  border-radius: 18px;
+  background: var(--nn-subtle);
+}
+.nn-sos__location .nn-results__heading {
+  padding-left: 8px;
+}
+.nn-sos__coords {
+  padding: 0 8px;
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.nn-sos__hint {
+  padding: 2px 8px;
+  font-size: 13px;
+  color: var(--nn-muted);
+  line-height: 1.4;
+}
+.nn-sos__actions {
+  display: flex;
+  gap: 8px;
+  padding: 8px 8px 0;
+}
+.nn-sos__group-sub {
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.nn-sos__line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  color: inherit;
+  text-decoration: none;
+}
+.nn-sos__line:active {
+  background: var(--nn-subtle);
+}
+.nn-sos__line-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.nn-sos__number {
+  flex: none;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.nn-sos__call {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #16a34a;
+}
+.nn-sos__group--emergency .nn-sos__call {
+  background: #e02424;
+}
+.nn-sos__group--emergency .nn-sos__number {
+  font-size: 20px;
+  color: #e02424;
+}
+/* SOS rows: let names and notes wrap so nothing important is cut off */
+.nn-sos__line .nn-place__name,
+.nn-sos__line .nn-place__address {
+  white-space: normal;
+}
+
+/* ============ Map style menu (layers button) ============ */
+.nn-style-menu-anchor {
+  position: relative;
+}
+.nn-style-menu {
+  position: absolute;
+  right: 72px;
+  top: 0;
+  width: 200px;
+  padding: 12px 14px 14px;
+  border-radius: 20px;
+  z-index: 5;
+}
+.nn-style-menu__label {
+  margin: 4px 2px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--nn-muted);
+}
+.nn-style-menu .nn-segmented {
+  display: flex;
+  width: 100%;
+  margin-bottom: 6px;
+}
+.nn-style-menu .nn-segmented button {
+  flex: 1;
+}
+
+/* ============ Talian hotline (TuJu style, always dark) ============ */
+.nn-hotline {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  background: rgba(5, 8, 14, 0.55);
+  animation: nn-fade-in 0.15s ease-out;
+}
+.nn-hotline__panel {
+  width: 100%;
+  max-width: 520px;
+  max-height: 92%;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 16px calc(env(safe-area-inset-bottom) + 18px);
+  border-radius: 28px 28px 0 0;
+  background: #181b22;
+  color: #eceff4;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+}
+.nn-hotline__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.nn-hotline__header h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.nn-hotline__round {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 2px solid #3a3f4a;
+  border-radius: 50%;
+  background: transparent;
+  color: #eceff4;
+}
+.nn-hotline__sos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  height: 112px;
+  margin-bottom: 12px;
+  border: 0;
+  border-radius: 22px;
+  background: #d14a3f;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 500;
+}
+.nn-hotline__sos:active,
+.nn-hotline__tile:active {
+  transform: scale(0.98);
+}
+.nn-hotline__sos-mark {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+.nn-hotline__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.nn-hotline__tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 112px;
+  padding: 14px;
+  border: 0;
+  border-radius: 22px;
+  background: #22252d;
+  color: #eceff4;
+  text-align: left;
+}
+.nn-hotline__tile-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+}
+.nn-hotline__tile-label {
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+.nn-hotline__foot {
+  margin: 14px 4px 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #8b93a3;
+}
+.nn-hotline__scroll {
+  overflow-y: auto;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+.nn-hotline__label {
+  margin: 14px 4px 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #8b93a3;
+}
+.nn-hotline__location {
+  padding: 2px 14px 14px;
+  border-radius: 20px;
+  background: #22252d;
+}
+.nn-hotline__location .nn-hotline__label {
+  margin-left: 0;
+}
+.nn-hotline__coords {
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.nn-hotline__hint {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #a5adbb;
+}
+.nn-hotline__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.nn-hotline__actions button {
+  border: 0;
+  border-radius: 999px;
+  padding: 9px 14px;
+  background: #2f3440;
+  color: #cfe0ff;
+  font-size: 14px;
+  font-weight: 600;
+}
+.nn-hotline__lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.nn-hotline__line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: #22252d;
+  color: inherit;
+  text-decoration: none;
+}
+.nn-hotline__line.is-suggested {
+  box-shadow: inset 0 0 0 2px #3e9b3a;
+}
+.nn-hotline__line-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.nn-hotline__line-name {
+  font-size: 17px;
+  font-weight: 600;
+}
+.nn-hotline__line-note {
+  margin-top: 2px;
+  font-size: 13px;
+  color: #a5adbb;
+}
+.nn-hotline__number {
+  flex: none;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.nn-hotline__call {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #2f9e44;
+}
+.nn-hotline__line.is-emergency .nn-hotline__call {
+  background: #e5484d;
+}
+.nn-hotline__line.is-emergency .nn-hotline__number {
+  font-size: 22px;
+  color: #ff6b6b;
+}
+/* Narrow phones: keep both tile columns inside the panel */
+.nn-hotline__grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.nn-hotline__tile {
+  gap: 10px;
+  padding: 12px;
+}
+.nn-hotline__tile-icon {
+  width: 40px;
+}
+.nn-hotline__tile-icon svg {
+  width: 38px;
+  height: 38px;
+}
+.nn-hotline__tile-label {
+  min-width: 0;
+  font-size: clamp(16px, 4.6vw, 19px);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Travel mode tabs (route preview) ---------- */
+.nn-mode-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  margin: 4px 0 10px;
+  padding: 4px;
+  border-radius: 16px;
+  background: var(--nn-subtle);
+}
+.nn-mode-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--nn-muted);
+  cursor: pointer;
+}
+.nn-mode-tab.is-active {
+  background: var(--nn-card-solid);
+  color: var(--nn-primary);
+  box-shadow: 0 1px 4px rgba(20, 36, 58, 0.15);
+}
+
+/* ---------- Shade / shelter (walking & cycling) ---------- */
+.nn-comfort {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 10px;
+}
+.nn-comfort__prefs {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--nn-subtle);
+}
+.nn-comfort__pref {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 32px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--nn-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.nn-comfort__pref.is-active {
+  background: var(--nn-card-solid);
+  color: var(--nn-text);
+  box-shadow: 0 1px 4px rgba(20, 36, 58, 0.15);
+}
+.nn-comfort__time {
+  flex: none;
+  height: 38px;
+  max-width: 128px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--nn-subtle);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--nn-text);
+}
+.nn-comfort-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 5px;
+}
+.nn-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--nn-subtle);
+  color: var(--nn-muted);
+}
+.nn-chip--shade { background: rgba(245, 166, 35, 0.14); color: #B26A00; }
+.nn-chip--shelter { background: rgba(22, 119, 255, 0.12); color: var(--nn-primary); }
+.nn-chip--best { background: rgba(34, 211, 165, 0.18); color: #0B8A6A; }
+:root[data-theme='dark'] .nn-chip--shade { color: #F5B547; }
+:root[data-theme='dark'] .nn-chip--best { color: #3EE0B5; }
+.nn-route-sheet__checking {
+  padding: 0 6px 8px;
+  font-size: 13px;
+  color: var(--nn-muted);
+}
+
+/* ======================= Arrow Mode ======================= */
+/* Always dark and high-contrast, whatever the map theme: easy to read at a glance, day or night. */
+.nn-arrow {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  padding: calc(env(safe-area-inset-top) + 14px) 18px calc(env(safe-area-inset-bottom) + 18px);
+  background: radial-gradient(120% 80% at 50% 38%, #18263b 0%, #0c1524 55%, #070d17 100%);
+  color: #f3f7fc;
+  font-family: Inter, system-ui, sans-serif;
+  user-select: none;
+}
+.nn-arrow__top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.nn-arrow__round {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.09);
+  color: #f3f7fc;
+  cursor: pointer;
+}
+.nn-arrow__round[aria-pressed='true'] {
+  color: #ffb547;
+}
+.nn-arrow__chip {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 16px;
+  font-weight: 600;
+}
+.nn-arrow__chip span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.nn-arrow__chip em {
+  flex: none;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: #ffb547;
+  color: #1a1206;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+.nn-arrow__stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+}
+.nn-bigarrow {
+  width: min(82vw, 46vh, 400px);
+  height: auto;
+  filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.45));
+}
+.nn-arrow__turnaround {
+  position: absolute;
+  bottom: 4%;
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: #f0444c;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 800;
+  animation: nn-pulse 1.1s ease-in-out infinite;
+}
+@keyframes nn-pulse {
+  50% {
+    transform: scale(1.06);
+  }
+}
+.nn-arrow__info {
+  text-align: center;
+  padding-bottom: 18px;
+}
+.nn-arrow__distance {
+  font-size: clamp(64px, 19vw, 104px);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.nn-arrow__place {
+  margin-top: 10px;
+  font-size: 19px;
+  font-weight: 600;
+  color: rgba(243, 247, 252, 0.82);
+}
+.nn-arrow__eta {
+  margin-top: 4px;
+  font-size: 17px;
+  color: rgba(243, 247, 252, 0.6);
+}
+.nn-arrow__nextturn {
+  margin-top: 12px;
+  font-size: 30px;
+  font-weight: 700;
+}
+.nn-arrow__note {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 7px 14px;
+  border-radius: 12px;
+  background: rgba(255, 181, 71, 0.14);
+  color: #ffc979;
+  font-size: 15px;
+  line-height: 1.35;
+}
+.nn-arrow__actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.nn-arrow__btn {
+  height: 58px;
+  border: 0;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #f3f7fc;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.nn-arrow__btn[aria-pressed='true'] {
+  background: #ffb547;
+  color: #1a1206;
+}
+.nn-arrow__btn--end {
+  background: #f0444c;
+  color: #fff;
+}
+.nn-arrow__btn:active,
+.nn-arrow__round:active {
+  transform: scale(0.96);
+}
+
+/* Driving (> 15 km/h): arrow, distance and next turn only, with bigger touch targets. */
+.nn-arrow--driving .nn-arrow__chip,
+.nn-arrow--driving .nn-arrow__place,
+.nn-arrow--driving .nn-arrow__eta {
+  display: none;
+}
+.nn-arrow--driving .nn-arrow__top {
+  justify-content: space-between;
+}
+.nn-arrow--driving .nn-arrow__round {
+  width: 64px;
+  height: 64px;
+}
+.nn-arrow--driving .nn-arrow__btn {
+  height: 72px;
+  font-size: 20px;
+}
+.nn-arrow--driving .nn-bigarrow {
+  width: min(90vw, 52vh, 460px);
+}
+
+/* Arrived */
+.nn-arrow--arrived {
+  justify-content: space-between;
+  text-align: center;
+}
+.nn-arrow__arrived {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.nn-arrow__arrived h1 {
+  margin: 26px 0 8px;
+  font-size: 36px;
+  font-weight: 700;
+}
+.nn-arrow__arrived p {
+  margin: 0;
+  font-size: 20px;
+  color: rgba(243, 247, 252, 0.75);
+}
+.nn-arrow__check {
+  width: 150px;
+  height: 150px;
+}
+.nn-arrow__check circle {
+  fill: rgba(92, 242, 184, 0.14);
+  stroke: #5cf2b8;
+  stroke-width: 5;
+}
+.nn-arrow__check path {
+  fill: none;
+  stroke: #5cf2b8;
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 90;
+  stroke-dashoffset: 90;
+  animation: nn-draw 0.6s 0.15s ease-out forwards;
+}
+@keyframes nn-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.nn-arrow__done {
+  width: 100%;
+  height: 62px;
+  border: 0;
+  border-radius: 20px;
+  background: #18c98b;
+  color: #04140d;
+  font: inherit;
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* Permission explainer */
+.nn-arrow__perm {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  padding: 18px 18px calc(env(safe-area-inset-bottom) + 18px);
+  background: rgba(4, 8, 14, 0.72);
+}
+.nn-arrow__perm-card {
+  width: 100%;
+  padding: 24px 20px 14px;
+  border-radius: 26px;
+  background: #142033;
+  text-align: center;
+}
+.nn-arrow__perm-card h2 {
+  margin: 0 0 10px;
+  font-size: 21px;
+}
+.nn-arrow__perm-card p {
+  margin: 0 0 18px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: rgba(243, 247, 252, 0.78);
+}
+.nn-arrow__perm-skip {
+  margin-top: 8px;
+  padding: 10px;
+  border: 0;
+  background: none;
+  color: rgba(243, 247, 252, 0.7);
+  font: inherit;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* Route screen: Start + Arrow Mode side by side */
+.nn-route-sheet__actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  gap: 10px;
+}
+.nn-route-sheet__actions .nn-route-sheet__start {
+  padding: 0 14px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.nn-route-sheet__arrow {
+  padding: 0 12px;
+  white-space: nowrap;
+}
+@media (max-width: 370px) {
+  .nn-route-sheet__arrow span {
+    display: none; /* very narrow phones: icon only */
+  }
+}
+.nn-secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 60px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--nn-subtle);
+  color: var(--nn-text);
+  font: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ---------- Quick search buttons (search screen) ---------- */
+.nn-quick {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 4px;
+  padding: 8px 14px 10px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none; /* swipe sideways; no scrollbar on phones */
+  -webkit-overflow-scrolling: touch;
+}
+.nn-quick::-webkit-scrollbar {
+  display: none;
+}
+.nn-quick__btn {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  width: 74px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--nn-text);
+  cursor: pointer;
+  scroll-snap-align: start;
+}
+.nn-quick__circle {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--nn-qc-bg);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(20, 36, 58, 0.16);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.nn-quick__btn:active .nn-quick__circle {
+  transform: scale(0.92);
+}
+.nn-quick__btn.is-active .nn-quick__circle {
+  box-shadow: 0 0 0 3px var(--nn-card-solid), 0 0 0 6px var(--nn-qc-bg);
+}
+.nn-quick__label {
+  max-width: 100%;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--nn-muted);
+}
+.nn-quick__btn.is-active .nn-quick__label {
+  color: var(--nn-text);
+}
+.nn-results__heading--row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ---------- Toll estimate (route screen) ---------- */
+.nn-tolls {
+  margin: 0 6px 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(245, 166, 35, 0.1);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--nn-text);
+}
+.nn-tolls__line + .nn-tolls__line {
+  margin-top: 4px;
+}
+.nn-tolls__line--muted {
+  color: var(--nn-muted);
+}
+.nn-tolls a {
+  color: var(--nn-primary);
+  font-weight: 600;
+}
+
+/* "15 min faster with tolls" card (route screen, when avoiding tolls/highways) */
+.nn-faster {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 6px 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(22, 119, 255, 0.09);
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--nn-text);
+}
+.nn-faster .nn-link-button {
+  flex: none;
+  white-space: nowrap;
+}
+.nn-route-sheet__also {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* ================= Lane guidance & toll reminder (Navigation screen) ================= */
+/* Lane row: a second line inside the existing instruction card, sliding open / closed. */
+.nn-instruction {
+  flex-wrap: wrap;
+}
+.nn-instruction__lanes {
+  flex-basis: 100%;
+  display: grid;
+  grid-template-rows: 0fr;
+  margin: -6px 0 -6px;
+  opacity: 0;
+  transition: grid-template-rows 0.3s ease, opacity 0.25s ease, margin 0.3s ease;
+}
+.nn-instruction__lanes.is-open {
+  grid-template-rows: 1fr;
+  margin: 0;
+  opacity: 1;
+}
+.nn-instruction__lanes-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+.nn-lanes {
+  display: flex;
+  justify-content: center;
+  padding-top: 10px;
+  border-top: 1.5px solid rgba(20, 36, 58, 0.1);
+}
+.nn-lane {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  color: #5b6b80;
+  opacity: 0.35; /* lanes you should NOT use */
+}
+.nn-lane + .nn-lane {
+  border-left: 1.5px solid rgba(20, 36, 58, 0.14);
+}
+.nn-lane.is-recommended {
+  color: #0e8a62; /* same green family as the turn arrow */
+  opacity: 1;
+}
+.nn-lane__svg {
+  width: 26px;
+  height: 34px;
+}
+@media (max-width: 380px) {
+  .nn-lane { width: 40px; }
+}
+
+/* The speed gauge and side buttons move down while the lane row is open. */
+.nn-speed,
+.nn-side-buttons {
+  transition: top 0.3s ease;
+}
+.nn-overlay--lanes .nn-speed,
+.nn-overlay--lanes .nn-side-buttons {
+  top: calc(env(safe-area-inset-top) + 214px);
+}
+
+/* Junction view: small card under the instruction card in the last ~300 m. */
+.nn-junction {
+  width: fit-content;
+  margin: 10px auto 0;
+  padding: 6px;
+  border-radius: 18px;
+  background: rgba(248, 251, 253, 0.94);
+  animation: nn-junction-in 0.25s ease;
+}
+.nn-junction svg {
+  display: block;
+  width: 116px;
+  height: auto;
+}
+.nn-junction__road {
+  fill: #d9e2ec;
+}
+.nn-junction__lane {
+  stroke: #aab6c4;
+}
+.nn-junction__lane.is-recommended {
+  stroke: #22c58f;
+}
+.nn-junction__head {
+  fill: #22c58f;
+}
+@keyframes nn-junction-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+/* Next-toll card: left side, under the speed gauge (moves down with it when lanes show). */
+.nn-nav-corner {
+  align-self: stretch;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 10px;
+  pointer-events: none;
+}
+.nn-nav-corner > * {
+  pointer-events: auto;
+}
+.nn-tollcard {
+  position: absolute;
+  left: 18px;
+  top: calc(env(safe-area-inset-top) + 270px);
+  width: 104px;
+  padding: 7px 10px 7px;
+  border-radius: 16px;
+  background: rgba(250, 252, 254, 0.94);
+  border: 2px solid transparent;
+  transition: background 0.3s ease, border-color 0.3s ease, top 0.3s ease;
+  animation: nn-junction-in 0.25s ease;
+}
+.nn-overlay--lanes .nn-tollcard {
+  top: calc(env(safe-area-inset-top) + 332px);
+}
+@media (max-width: 390px) {
+  .nn-tollcard { top: calc(env(safe-area-inset-top) + 256px); width: 100px; }
+  .nn-overlay--lanes .nn-tollcard { top: calc(env(safe-area-inset-top) + 318px); }
+}
+.nn-tollcard.is-near {
+  background: #fff4de;
+  border-color: #f5a524; /* within 1 km */
+}
+.nn-tollcard__top {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--nn-primary);
+  font-size: 11px;
+  font-weight: 700;
+}
+.nn-tollcard.is-near .nn-tollcard__top {
+  color: #b26a00;
+}
+.nn-tollcard__distance {
+  margin-top: 1px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.nn-tollcard__name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--nn-muted);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.nn-tollcard__price {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--nn-text);
+}
+.nn-tollcard__after {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(20, 36, 58, 0.1);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--nn-muted);
+}
+
+/* Night mode */
+:root[data-theme='dark'] .nn-lanes { border-top-color: rgba(255, 255, 255, 0.1); }
+:root[data-theme='dark'] .nn-lane { color: #9aa8b9; }
+:root[data-theme='dark'] .nn-lane + .nn-lane { border-left-color: rgba(255, 255, 255, 0.12); }
+:root[data-theme='dark'] .nn-lane.is-recommended { color: #3ee0b5; }
+:root[data-theme='dark'] .nn-junction,
+:root[data-theme='dark'] .nn-tollcard { background: var(--nn-card); }
+:root[data-theme='dark'] .nn-junction__road { fill: #2a3a50; }
+:root[data-theme='dark'] .nn-junction__lane { stroke: #4b5d74; }
+:root[data-theme='dark'] .nn-tollcard.is-near { background: #3a2a0c; border-color: #f5a524; }
+:root[data-theme='dark'] .nn-tollcard.is-near .nn-tollcard__top { color: #f5b547; }
+:root[data-theme='dark'] .nn-tollcard__after { border-top-color: rgba(255, 255, 255, 0.1); }
+
+/* Home card: second demo (lanes & tolls) */
+.nn-home-card__demo2 {
+  display: block;
+  margin-top: 8px;
+  padding: 4px 0 0;
+  font-size: 14px;
+  text-align: left;
+}
+
+/* Dev check page (?navcheck=1) */
+.nn-navcheck {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 18px 48px;
+  font-family: Inter, system-ui, sans-serif;
+  color: var(--nn-text);
+  background: var(--nn-bg);
+  min-height: 100vh;
+  overflow: auto;
+}
+.nn-navcheck ul { padding: 0; list-style: none; }
+.nn-navcheck li { padding: 8px 0; border-bottom: 1px solid var(--nn-line); font-size: 14px; }
+.nn-navcheck li code { display: block; margin-top: 4px; font-size: 12px; white-space: pre-wrap; color: var(--nn-muted); }
+.nn-navcheck .is-pass strong, .nn-navcheck p.is-pass { color: #0e8a62; }
+.nn-navcheck .is-fail strong, .nn-navcheck p.is-fail { color: #d6404b; }
+.nn-navcheck__note { font-size: 12px; color: var(--nn-muted); }
+
+/* ======================= Flood & weather alerts ======================= */
+.nn-chip--flood { background: rgba(229, 72, 77, 0.13); color: #C2262C; }
+.nn-chip--avoids { background: rgba(34, 211, 165, 0.16); color: #0B7A5E; }
+:root[data-theme='dark'] .nn-chip--flood { color: #FF8A8E; }
+:root[data-theme='dark'] .nn-chip--avoids { color: #3EE0B5; }
+
+/* Route preview banner (above the route options) */
+.nn-hazbanner {
+  margin: 0 6px 8px;
+  border-radius: 14px;
+  background: rgba(245, 165, 36, 0.13);
+  border: 1px solid rgba(245, 165, 36, 0.45);
+  overflow: hidden;
+}
+.nn-hazbanner.is-danger,
+.nn-hazbanner.is-flood.is-warning {
+  background: rgba(229, 72, 77, 0.1);
+  border-color: rgba(229, 72, 77, 0.45);
+}
+.nn-hazbanner__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border: 0;
+  background: none;
+  color: var(--nn-text);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+}
+.nn-hazbanner__text { flex: 1; min-width: 0; }
+.nn-hazbanner__more { flex: none; font-size: 13px; font-weight: 700; color: var(--nn-primary); white-space: pre; }
+.nn-hazbanner__text { font-weight: 800; letter-spacing: 0.02em; }
+.nn-hazbanner .nn-hazlist { padding: 0 12px 10px; }
+
+.nn-hazavoid {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin: 0 6px 8px;
+  padding: 0 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--nn-muted);
+}
+
+/* Destination forecast chip */
+.nn-weatherchip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 6px 8px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(22, 119, 255, 0.07);
+  font-size: 12.5px;
+  color: var(--nn-text);
+}
+.nn-weatherchip__text { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.nn-weatherchip__src { flex: none; font-size: 10.5px; font-weight: 700; color: var(--nn-muted); }
+
+/* Alert list (banner details + navigation sheet) */
+.nn-hazlist ul { list-style: none; margin: 0; padding: 0; }
+.nn-hazlist__item {
+  display: flex;
+  gap: 8px;
+  padding: 8px 0;
+  border-top: 1px solid rgba(20, 36, 58, 0.08);
+}
+.nn-hazlist__icon { flex: none; font-size: 18px; line-height: 1.2; }
+.nn-hazlist__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 13px; line-height: 1.35; }
+.nn-hazlist__body strong { font-size: 13.5px; }
+.nn-hazlist__item.is-danger strong { color: #C2262C; }
+.nn-hazlist__meta { color: var(--nn-muted); font-size: 12px; }
+.nn-hazlist__note { margin: 6px 0 0; font-size: 12px; line-height: 1.4; color: var(--nn-muted); }
+.nn-hazlist__demo,
+.nn-hazpill__demo {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: #34465c;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  vertical-align: 1px;
+}
+:root[data-theme='dark'] .nn-hazlist__item { border-top-color: rgba(255, 255, 255, 0.1); }
+:root[data-theme='dark'] .nn-hazlist__item.is-danger strong { color: #FF8A8E; }
+
+/* Navigation pill: compact, centred under the instruction card (fits the gap above the gauge) */
+.nn-hazpill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: calc(100% - 20px);
+  height: 26px;
+  margin: 5px auto 0;
+  padding: 0 12px;
+  border: 1.5px solid #F5A524;
+  border-radius: 13px;
+  background: rgba(255, 248, 232, 0.96);
+  color: #8A5300;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(20, 36, 58, 0.12);
+  cursor: default;
+  animation: nn-junction-in 0.25s ease;
+}
+.nn-hazpill.is-red { border-color: #E5484D; background: rgba(255, 240, 240, 0.96); color: #B3242A; }
+.nn-hazpill.is-tappable { cursor: pointer; }
+:root[data-theme='dark'] .nn-hazpill { background: rgba(58, 42, 12, 0.95); color: #F5B547; }
+:root[data-theme='dark'] .nn-hazpill.is-red { background: rgba(70, 20, 22, 0.95); color: #FF8A8E; }
+
+/* Navigation details sheet (only while stopped) */
+.nn-hazsheet {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: flex-end;
+  padding: 16px 16px calc(env(safe-area-inset-bottom) + 16px);
+  background: rgba(10, 20, 35, 0.35);
+}
+.nn-hazsheet__card {
+  width: 100%;
+  max-height: 70%;
+  overflow-y: auto;
+  padding: 14px 16px 16px;
+  border-radius: 24px;
+}
+.nn-hazsheet__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; font-size: 16px; }
+
+/* ======================= Avatar ======================= */
+.nn-avatar {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  max-width: 520px;
+  margin: 0 auto;
+  background: var(--nn-bg);
+  color: var(--nn-text);
+  animation: nn-fade-in 0.15s ease-out;
+}
+:root[data-theme='dark'] .nn-avatar { background: #0f1724; }
+.nn-avatar__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: calc(env(safe-area-inset-top) + 12px) 14px 8px;
+}
+.nn-avatar__head h1 { flex: 1; margin: 0; font-size: 20px; }
+.nn-avatar__done { width: auto; min-height: 40px; padding: 0 18px; font-size: 15px; }
+.nn-avatar__stage {
+  position: relative;
+  flex: none;
+  height: 230px;
+  margin: 0 14px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #e8f1fb, #f7fafc);
+  overflow: hidden;
+}
+:root[data-theme='dark'] .nn-avatar__stage { background: linear-gradient(180deg, #1b2a40, #111a28); }
+.nn-avatar-preview { position: absolute; inset: 0; touch-action: none; }
+.nn-avatar-preview canvas { width: 100%; height: 100%; display: block; }
+.nn-avatar__empty { display: grid; place-items: center; height: 100%; padding: 20px; text-align: center; font-size: 13px; color: var(--nn-muted); }
+.nn-avatar__drag { position: absolute; right: 12px; bottom: 8px; font-size: 11px; color: var(--nn-muted); pointer-events: none; }
+.nn-avatar__body { flex: 1; overflow-y: auto; padding: 4px 14px calc(env(safe-area-inset-bottom) + 20px); }
+.nn-avatar__body h2 { margin: 14px 2px 8px; font-size: 13px; font-weight: 700; color: var(--nn-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.nn-avatar__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.nn-avatar__tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 4px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  background: var(--nn-card);
+  color: var(--nn-text);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+}
+.nn-avatar__tile.is-on { border-color: var(--nn-primary); }
+.nn-avatar__swatch { width: 26px; height: 26px; border-radius: 50%; border: 4px solid; }
+.nn-avatar__swatch--upload { display: grid; place-items: center; border-color: var(--nn-muted); color: var(--nn-muted); font-size: 13px; }
+.nn-avatar__section { margin-top: 4px; }
+.nn-avatar__row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.nn-avatar__colour { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+.nn-avatar__colour input { width: 40px; height: 32px; padding: 0; border: 0; background: none; }
+.nn-avatar__chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.nn-avatar__palette,
+.nn-chip-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border: 1.5px solid rgba(20, 36, 58, 0.12);
+  border-radius: 999px;
+  background: var(--nn-card);
+  color: var(--nn-text);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.nn-avatar__palette span { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.1); }
+.nn-chip-toggle.is-on { border-color: var(--nn-primary); color: var(--nn-primary); }
+.nn-avatar__name {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid rgba(20, 36, 58, 0.15);
+  border-radius: 12px;
+  background: var(--nn-card);
+  color: var(--nn-text);
+  font: inherit;
+  font-size: 15px;
+}
+.nn-avatar__hint { margin: 0 2px 8px; font-size: 12.5px; color: var(--nn-muted); }
+.nn-avatar__error { margin: 6px 2px; font-size: 13px; font-weight: 600; color: #c2262c; }
+.nn-avatar__ok { font-size: 13px; font-weight: 600; color: #0b7a5e; }
+
+/* Floating name tag over the avatar (map marker + preview) */
+.nn-avatar-tag {
+  padding: 3px 9px;
+  border-radius: 10px;
+  background: rgba(20, 36, 58, 0.82);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+.nn-avatar-tag--preview { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); }
+
+/* Voice personality picker (Settings) */
+.nn-voicepick { flex-direction: column; align-items: stretch; gap: 8px; }
+.nn-voicepick__list { display: flex; flex-direction: column; gap: 6px; }
+.nn-voicepick__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1.5px solid rgba(20, 36, 58, 0.1);
+  border-radius: 14px;
+}
+.nn-voicepick__item.is-on { border-color: var(--nn-primary); background: rgba(22, 119, 255, 0.06); }
+.nn-voicepick__pick {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: var(--nn-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.nn-voicepick__pick strong { font-size: 14px; }
+.nn-voicepick__pick span { font-size: 12px; color: var(--nn-muted); }
+
+/* ======================= Hazard reports & Wanted posters ======================= */
+.nn-report-btn { position: relative; }
+.nn-report-btn__icon { display: grid; place-items: center; color: #b26a00; }
+.nn-report-btn__icon.is-dim { opacity: 0.45; }
+.nn-report-btn__bubble {
+  position: absolute;
+  right: 70px;
+  top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 168px;
+  padding: 9px 12px;
+  border-radius: 14px;
+  background: var(--nn-card);
+  box-shadow: var(--nn-shadow);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--nn-text);
+}
+.nn-report-btn__bubble .nn-link-button { align-self: flex-start; padding: 0; font-size: 13px; }
+
+.nn-sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px 16px calc(env(safe-area-inset-bottom) + 16px);
+  background: rgba(10, 20, 35, 0.35);
+  animation: nn-fade-in 0.15s ease-out;
+}
+.nn-report-sheet {
+  width: 100%;
+  max-width: 488px;
+  max-height: 88%;
+  overflow-y: auto;
+  padding: 14px 16px 16px;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.nn-report-sheet__head { display: flex; align-items: center; justify-content: space-between; font-size: 17px; }
+.nn-report-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.nn-report-type {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  background: rgba(20, 36, 58, 0.05);
+  color: var(--nn-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+}
+.nn-report-type span { font-size: 22px; }
+.nn-report-type.is-on { border-color: #f5a524; background: rgba(245, 165, 36, 0.12); }
+.nn-report-sheet__where { display: flex; flex-direction: column; font-size: 12px; color: var(--nn-muted); }
+.nn-report-sheet__where strong { font-size: 15px; color: var(--nn-text); }
+.nn-report-sheet__field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--nn-muted); }
+.nn-report-sheet__field input {
+  padding: 9px 11px;
+  border: 1.5px solid rgba(20, 36, 58, 0.15);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--nn-text);
+  font: inherit;
+  font-size: 15px;
+}
+.nn-report-sheet__photobtn { display: inline-flex; align-items: center; gap: 6px; width: fit-content; height: 44px; padding: 0 18px; font-size: 15px; background: rgba(20, 36, 58, 0.07); cursor: pointer; }
+.nn-report-sheet__thumb { display: flex; align-items: center; gap: 10px; }
+.nn-report-sheet__thumb img { width: 88px; height: 66px; object-fit: cover; border-radius: 10px; }
+.nn-report-sheet__hint { margin: 4px 2px 0; font-size: 12px; color: #b26a00; }
+
+.nn-poster,
+.nn-wall {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  max-width: 520px;
+  margin: 0 auto;
+  background: var(--nn-bg);
+  color: var(--nn-text);
+  animation: nn-fade-in 0.15s ease-out;
+}
+:root[data-theme='dark'] .nn-poster,
+:root[data-theme='dark'] .nn-wall { background: #0f1724; }
+.nn-poster__img { flex: 1; min-height: 0; display: grid; place-items: center; padding: 0 14px; }
+.nn-poster__img img { max-width: 100%; max-height: 100%; border-radius: 6px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25); }
+.nn-poster__loading { width: 60%; aspect-ratio: 1080 / 1500; border-radius: 6px; background: rgba(20, 36, 58, 0.08); }
+.nn-poster__note { margin: 6px 16px 0; font-size: 12.5px; text-align: center; color: var(--nn-muted); }
+.nn-poster__danger { display: flex; align-items: center; justify-content: center; gap: 2px; margin: 6px 0 0; font-size: 13px; font-weight: 600; }
+.nn-poster__danger span { margin-right: 6px; }
+.nn-poster__danger button { border: 0; background: none; font-size: 20px; cursor: pointer; filter: grayscale(1); opacity: 0.4; }
+.nn-poster__danger button.is-on { filter: none; opacity: 1; }
+.nn-poster__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 10px 14px calc(env(safe-area-inset-bottom) + 14px);
+}
+.nn-poster__actions .nn-primary-button,
+.nn-poster__actions .nn-secondary-button { min-height: 44px; font-size: 14px; }
+.nn-wall__body { flex: 1; overflow-y: auto; padding: 0 14px calc(env(safe-area-inset-bottom) + 20px); }
+.nn-wall__hero { margin: 4px 2px 8px; font-size: 16px; font-weight: 700; }
+.nn-wall__counts { display: flex; flex-wrap: wrap; gap: 6px; }
+.nn-wall__total { margin: 8px 2px 12px; font-size: 12.5px; color: var(--nn-muted); }
+.nn-wall__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+.nn-wall__item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.nn-wall__poster { padding: 0; border: 0; background: none; cursor: pointer; }
+.nn-wall__poster img,
+.nn-wall__ph { display: block; width: 100%; aspect-ratio: 1080 / 1500; border-radius: 4px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); }
+.nn-wall__ph { background: rgba(20, 36, 58, 0.08); }
+
+/* Navigation: left column (toll card + Report button) under the speed gauge */
+.nn-left-stack {
+  position: absolute;
+  left: 18px;
+  top: calc(env(safe-area-inset-top) + 270px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  transition: top 0.3s ease;
+}
+.nn-overlay--lanes .nn-left-stack { top: calc(env(safe-area-inset-top) + 332px); }
+@media (max-width: 390px) {
+  .nn-left-stack { top: calc(env(safe-area-inset-top) + 256px); }
+  .nn-overlay--lanes .nn-left-stack { top: calc(env(safe-area-inset-top) + 318px); }
+}
+.nn-left-stack .nn-tollcard { position: static; }
+.nn-left-stack .nn-report-btn__bubble { right: auto; left: 70px; }

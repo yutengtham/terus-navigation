@@ -1,0 +1,23 @@
+# Dependencies (re-created by "npm install")
+node_modules/
+
+# Build output (re-created by "npm run build")
+dist/
+
+# Private settings - NEVER upload these to GitHub
+.env
+.env.local
+.env.*.local
+
+# Editor / OS clutter
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+*.log
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Claude file transfers
+.deploy/
